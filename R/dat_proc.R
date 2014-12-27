@@ -50,6 +50,10 @@ wq_dat <- melt(wq_dat, id.var = c('datetimestamp', 'stat'))
 wq_dat$year <- strftime(wq_dat$datetimestamp, '%Y')
 wq_dat <- split(wq_dat, wq_dat$variable)
 
+# remove empty parameters (only in wq)
+# llply(wq_dat, function(x) sum(is.na(x$value)) == nrow(x))
+wq_dat <- wq_dat[!names(wq_dat) %in% c('cdepth', 'clevel')]
+
 # save output
 save(nut_dat, file = 'data/nut_dat.RData')
 save(met_dat, file = 'data/met_dat.RData')
