@@ -1,5 +1,8 @@
 library(shiny)
 
+load(file = 'data/north_am.Rdata')
+load(file = 'data/meta.RData')
+
 # Define UI for application
 shinyUI(fluidPage(
   
@@ -15,16 +18,40 @@ shinyUI(fluidPage(
   fluidRow(
     
     column(4, 
-      h3('Select data type'),
-  
-      selectInput("data_type", label = '', 
+      h3('Select parameter'),
+     
+      selectInput(inputId = "var", label = '',  
+        selected = 'wq: temp',
         choices = list(
-          'Water quality' = 'wq', 
-          'Meteorology' = 'met', 
-          'Nutrients' = 'nut'
-          ),
-        
-        selected = "wq")
+          'wq: Temperature (C)' = 'wq: temp',
+          'wq: Specific conductivity (mS/cm)' = 'wq: spcond',
+          'wq: Salinity (psu)' = 'wq: sal',
+          'wq: Dissolved oxyxgen (%)' = 'wq: do_pct',
+          'wq: Dissolved oxygen (mg/L)' = 'wq: do_mgl',
+          'wq: Depth (m)' = 'wq: depth',
+          'wq: Referenced depth (m)' = 'wq: level',
+          'wq: pH' = 'wq: ph',
+          'wq: Turbidity (NTU)' = 'wq: turb',
+          'wq: Chl fluorescence (ug/L)' = 'wq: chlfluor',
+          'met: Air temperature (C)' = 'met: atemp',
+          'met: Relative humidity (%)' = 'met: rh',
+          'met: Barometric pressure (mb)' = 'met: bp',
+          'met: Wind speed (m/s)' = 'met: wspd',
+          'met: Max wind speed (m/s)' = 'met: maxwspd',
+          'met: Wind direction (degrees)' = 'met: wdir',
+          'met: Wind direction (sd, degrees)' = 'met: sdwdir',
+          'met: Total PAR (mmol/m2)' = 'met: totpar',
+          'met: Total precipitation (mm)' = 'met: totprcp',
+          'met: Cumulative precipitation (mm)' = 'met: cumprcp',
+          'met: Total solar radiation (watts/m2)' = 'met: totsorad',
+          'nut: Orthophosphate (mg/L)' = 'nut: po4f', 
+          'nut: Ammonium (mg/L)' = 'nut: nh4f',
+          'nut: Nitrite (mg/L)' = 'nut: no2f', 
+          'nut: Nitrate (mg/L)' = 'nut: no3f',
+          'nut: Nitrite + Nitrage (mg/L)' = 'nut: no23f', 
+          'nut: Chlorophyll-a (ug/L)' = 'nut: chla_n'
+        )
+      )
       
     ),
     
@@ -33,15 +60,24 @@ shinyUI(fluidPage(
     
       uiOutput("years")
       
-    ),
-  
-    column(4,
-      h3('Select variable'), 
+    ) #,
     
-      uiOutput("parms")
+#     column(4,
+#       h3('Select salinity range'), 
+#     
+#       selectInput(inputId = "salinity", label = '',  
+#         selected = 'all',
+#         choices = list(
+#           'all' = 'all',
+#           '00 - 06' = '00 - 06',
+#           '07 - 15' = '07 - 15',
+#           '16 - 20' = '16 - 20',
+#           '20 - 25' = '20 - 25'
+#         )
+#       )
       
     )
-    
+
   ),
   
 #   downloadButton('downloadplot', 'Download plot'),

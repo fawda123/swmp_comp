@@ -42,14 +42,25 @@ summs_fun <- function(dat_in, yrs, meta_in = meta, poly_in = north_am){
   # plot
   poly_in <- fortify(poly_in)
   
+  # set legend based on unique values in results
+  leg_look <- data.frame(
+    nms = c('NEG (nonsig)', 'NEG (p<0.05)', 'NEG (p<0.01)', 'POS (nonsig)', 
+      'POS (p<0.05)', 'POS (p<0.01)'),
+    cols = colors()[c(520, 522, 523, 503, 506, 507)],
+    shps = c(rep(25, 3), rep(24, 3))
+  )
+  leg_nms <- leg_look$nms %in% levels(res$lab)  
+  leg_cols <- as.character(leg_look[leg_nms, 'cols'])
+  leg_shps <- leg_look[leg_nms, 'shps']
+  
   p <- ggplot(poly_in, aes(x = long, y = lat)) + 
     geom_polygon(aes(group = group), colour = 'lightgrey', fill = 'lightgrey') + 
     coord_equal() +
     theme_classic() + 
     geom_point(data = to_plo, aes(x = Longitude, y = Latitude, 
       shape = lab, fill = lab), size = 5) + 
-    scale_shape_manual('trends', values = c(rep(25, 3), rep(24, 3))) + 
-    scale_fill_manual('trends', values = colors()[c(520, 522, 523, 503, 506, 507)]) +
+    scale_shape_manual('trends', values = leg_shps) + 
+    scale_fill_manual('trends', values = leg_cols) +
     theme(legend.position = 'bottom', axis.title = element_blank(), legend.title = element_blank())
   
   p
