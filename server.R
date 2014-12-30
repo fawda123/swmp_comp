@@ -3,6 +3,8 @@ library(data.table)
 library(ggplot2)
 library(gridExtra)
 library(plyr)
+library(sp)
+library(maptools)
 
 # data to use
 # load(file = 'data/nut_dat.RData')
@@ -46,7 +48,6 @@ shinyServer(function(input, output, session) {
     # preprocessing
     load(file = 'data/meta.RData')
     load(file = 'data/north_am.RData')
-#     browser()
     p1 <- summs_fun(dat(), years, meta_in = meta, poly_in = north_am)
 
     ##

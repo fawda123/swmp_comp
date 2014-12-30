@@ -13,13 +13,14 @@ summs_fun <- function(dat_in, yrs, meta_in = meta, poly_in = north_am){
   # subset by parameter and year range
   dat_sel <- dat_in[dat_in$year >= yrs[1] & dat_in$year <= yrs[2], ]
   
+  # process on non-NA data
   res <- dlply(na.omit(dat_sel), .variables = 'stat', 
     .fun = function(x){
       out <- tryCatch({
         mod <- lm(value ~ datetimestamp, data = x)
         summary(mod)$coefficients['datetimestamp', c(1, 4)]
       }, warning = function(w) w, error = function(e) e)
-      if(any(c('warning', 'try-error') %in% class(out))) out <- NA
+      if(any(c('warning', 'try-error', 'error', 'simpleError') %in% class(out))) out <- NA
       c(sign(out[1]), out[2])
     }
   )

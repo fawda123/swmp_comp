@@ -1,6 +1,6 @@
 library(shiny)
 
-load(file = 'data/north_am.Rdata')
+load(file = 'data/north_am.RData')
 load(file = 'data/meta.RData')
 
 # Define UI for application
@@ -21,7 +21,7 @@ shinyUI(fluidPage(
       h3('Select parameter'),
      
       selectInput(inputId = "var", label = '',  
-        selected = 'wq: temp',
+        selected = 'nut: po4f',
         choices = list(
           'wq: Temperature (C)' = 'wq: temp',
           'wq: Specific conductivity (mS/cm)' = 'wq: spcond',
@@ -48,7 +48,7 @@ shinyUI(fluidPage(
           'nut: Ammonium (mg/L)' = 'nut: nh4f',
           'nut: Nitrite (mg/L)' = 'nut: no2f', 
           'nut: Nitrate (mg/L)' = 'nut: no3f',
-          'nut: Nitrite + Nitrage (mg/L)' = 'nut: no23f', 
+          'nut: Nitrite + Nitrate (mg/L)' = 'nut: no23f', 
           'nut: Chlorophyll-a (ug/L)' = 'nut: chla_n'
         )
       )
@@ -76,7 +76,7 @@ shinyUI(fluidPage(
 #         )
 #       )
       
-    )
+#     )
 
   ),
   
