@@ -5,10 +5,16 @@
 #' @param dat_in summarized time series of selected SWMP data parameter for all stations
 #' @param chr of parameter to compare
 #' @param two element vector of years to subset data
-#' @param meta_in is 
-#'
+#' @param meta_in is data frame of station metadata, including lat/long 
+#' @param poly_in is SpatialPolygonsDataFrame of north america
+#' @param noplot is logical if summary data should be returned as output, default F
+#' @param cols is numeric vector of colors for plotting, correspond to indices in colors()
+#
 #' @return ggplot object
-summs_fun <- function(dat_in, yrs, meta_in = meta, poly_in = north_am){
+summs_fun <- function(dat_in, yrs, meta_in = meta, poly_in = north_am, noplot = F, cols = c(520, 522, 523, 503, 506, 507)){
+  
+  # use all years if missing
+  if(missing(yrs)) yrs <- range(dat_in$year)
   
   # subset by parameter and year range
   dat_sel <- dat_in[dat_in$year >= yrs[1] & dat_in$year <= yrs[2], ]
@@ -29,6 +35,10 @@ summs_fun <- function(dat_in, yrs, meta_in = meta, poly_in = north_am){
   row.names(res) <- NULL
   names(res) <- c('stat', 'sign', 'pval')
   res$sign <- factor(res$sign, levels = c('1', '-1'), labels = c('POS', 'NEG'))
+  res$pval_rad <- as.numeric(as.character(cut(res$pval,
+    c(-Inf, 0.01, 0.05, +Inf),
+    labels=c('20', '10', '5')
+  )))
   res$pval <- cut(res$pval,
     c(-Inf, 0.01, 0.05, +Inf),
     labels=c('p<0.01', 'p<0.05', 'nonsig')
@@ -40,19 +50,29 @@ summs_fun <- function(dat_in, yrs, meta_in = meta, poly_in = north_am){
   # merge locations with data for plotting
   to_plo <- merge(res, meta_in, by = 'stat')
   
-  # plot
-  poly_in <- fortify(poly_in)
-  
   # set legend based on unique values in results
   leg_look <- data.frame(
-    nms = c('NEG (nonsig)', 'NEG (p<0.05)', 'NEG (p<0.01)', 'POS (nonsig)', 
+    lab = c('NEG (nonsig)', 'NEG (p<0.05)', 'NEG (p<0.01)', 'POS (nonsig)', 
       'POS (p<0.05)', 'POS (p<0.01)'),
-    cols = colors()[c(520, 522, 523, 503, 506, 507)],
+    cols = colors()[cols],
     shps = c(rep(25, 3), rep(24, 3))
   )
-  leg_nms <- leg_look$nms %in% levels(res$lab)  
+  leg_nms <- leg_look$lab %in% levels(res$lab)  
   leg_cols <- as.character(leg_look[leg_nms, 'cols'])
   leg_shps <- leg_look[leg_nms, 'shps']
+  
+  # return summary data if T
+  if(noplot){
+    
+    # merge w/ leg_look for colors, shapes
+    out <- data.frame(merge(to_plo, leg_look, by = 'lab', all.x = T))
+    out$cols <- as.character(out$cols)
+    return(out)
+    
+  }
+  
+  # base plot
+  poly_in <- fortify(poly_in)
   
   p <- ggplot(poly_in, aes(x = long, y = lat)) + 
     geom_polygon(aes(group = group), colour = 'lightgrey', fill = 'lightgrey') + 

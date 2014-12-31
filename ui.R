@@ -1,4 +1,5 @@
 library(shiny)
+library(leaflet)
 
 load(file = 'data/north_am.RData')
 load(file = 'data/meta.RData')
@@ -80,10 +81,10 @@ shinyUI(fluidPage(
 
   ),
   
-#   downloadButton('downloadplot', 'Download plot'),
+  downloadButton('downloadplot', 'Download plot'),
   
-  # Show the plot,
-  plotOutput("outplot", width = "100%") #,
+  # Show the plot
+  leafletOutput('outplot')
   
 #   tags$style(type="text/css",
 #       ".shiny-output-error { visibility: hidden; }",

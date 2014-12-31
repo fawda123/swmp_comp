@@ -5,11 +5,10 @@ library(gridExtra)
 library(plyr)
 library(sp)
 library(maptools)
+library(leaflet)
+library(htmltools)
 
 # data to use
-# load(file = 'data/nut_dat.RData')
-# load(file = 'data/met_dat.RData')
-# load(file = 'data/wq_dat.RData')
 load(file = 'data/all_dat.RData')
 
 source('R/funcs.R')
@@ -45,20 +44,29 @@ shinyServer(function(input, output, session) {
     years <- input$years
     
     ##
-    # preprocessing
+    # processing
     load(file = 'data/meta.RData')
     load(file = 'data/north_am.RData')
-    p1 <- summs_fun(dat(), years, meta_in = meta, poly_in = north_am)
-
+    to_plo <- summs_fun(dat(), years, meta_in = meta, poly_in = north_am, noplot = T)
+    to_plo$pop_txt <- with(to_plo, paste0(stat, ', ', lab))
+    
+    col_vec <- unique(to_plo[, c('lab', 'cols')])
+    col_vec <- colorFactor(palette = col_vec$cols, levels = col_vec$lab)
+    
     ##
     # plots
-    arrangeGrob(p1)
+    m <- leaflet(to_plo) %>% addTiles()
+    m <- m %>%  addCircleMarkers(lat = ~Latitude, lng = ~Longitude, radius = ~pval_rad,
+                            color = ~col_vec(lab), opacity = 0.8, 
+                            popup = ~htmlEscape(pop_txt))
+    
+    m <- m %>% setView(lng = -105.34, lat = 41.52, zoom = 3, options = list(animate = T, reset = F))
+    
+    m
     
     })
-  
-  output$outplot <- renderPlot({
-    print(plotInput())
-    }, height = 600, width = 1100)
+
+  output$outplot <- renderLeaflet(print(plotInput()))
   
   output$downloadplot <- downloadHandler(
     filename = function() { paste(input$stat, '.pdf', sep='') },
