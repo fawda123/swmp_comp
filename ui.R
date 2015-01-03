@@ -3,6 +3,8 @@ library(shiny)
 library(ShinyDash)
 shinyUI(fluidPage(
   
+  theme = 'styles.css',
+  
   # Application title
   h2("Trends in SWMP parameters across stations"),
   
@@ -63,23 +65,19 @@ shinyUI(fluidPage(
   fluidRow(
     
     column(12, 
-    div(class="outer",
-  
-  tags$head(
-    # Include our custom CSS
-    includeCSS("styles.css"),
-    includeScript("gomap.js")
-  ),
 
-  leafletMap("map", width="100%", height="60%",
-    initialTileLayer = "//{s}.tiles.mapbox.com/v3/jcheng.map-5ebohr46/{z}/{x}/{y}.png",
-    initialTileLayerAttribution = HTML('Maps by <a href="http://www.mapbox.com/">Mapbox</a>'),
-    options=list(
-      center = c(37.45, -93.85),
-      zoom = 5, maxZoom=9,
-    maxBounds = list(list(15.961329,-129.92981), list(52.908902,-56.80481)) # Show US only
-    )
-  ))
+    leafletMap("map", width="100%", height="60%",
+      initialTileLayer = "//{s}.tiles.mapbox.com/v3/jcheng.map-5ebohr46/{z}/{x}/{y}.png",
+      initialTileLayerAttribution = HTML('Maps by <a href="http://www.mapbox.com/">Mapbox</a>'),
+      options=list(
+        center = c(37.45, -93.85),
+        zoom = 5, maxZoom=9,
+        maxBounds = list(list(15.961329,-129.92981), list(52.908902,-56.80481)) # Show US only
+        )
+      )
     
-  ))
+    )
+    
+  )
+
 ))
