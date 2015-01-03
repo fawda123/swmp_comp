@@ -1,7 +1,15 @@
 library(reshape2)
 library(devtools)
 library(plyr)
+library(httr)
+library(XML)
 load_all('M:/docs/SWMPr')
+
+# names of files on server
+files_s3 <- httr::GET('https://s3.amazonaws.com/swmpagg/')$content
+files_s3 <- rawToChar(files_s3)
+files_s3 <- htmlTreeParse(files_s3, useInternalNodes = T)
+files_s3 <- xpathSApply(files_s3, '//contents//key', xmlValue)
 
 # aggregate all data to monthly for quick comps
 out_ls <- vector('list', length = length(files_s3))
@@ -58,4 +66,6 @@ wq_dat <- wq_dat[!names(wq_dat) %in% c('cdepth', 'clevel')]
 all_dat <- c(wq_dat, met_dat, nut_dat)
 save(all_dat, file = 'data/all_dat.RData')
 
-
+data(quakes)
+dat <- toGeoJSON(data=quakes, dest=tempdir())
+map <- leaflet(data=dat, dest=tempdir(),base.map="mqsat", popup="mag")

@@ -1,10 +1,6 @@
-library(shiny)
 library(leaflet)
-
-load(file = 'data/north_am.RData')
-load(file = 'data/meta.RData')
-
-# Define UI for application
+library(shiny)
+library(ShinyDash)
 shinyUI(fluidPage(
   
   # Application title
@@ -13,8 +9,7 @@ shinyUI(fluidPage(
   h4('Created by Marcus W. Beck,', a('beck.marcus@epa.gov', href = 'mailto:beck.marcus@epa.gov')),
   
   p('This interactive widget provides graphical summaries of trends over time in SWMP parameters across all stations.'),
-#   p('This interactive widget provides graphical summaries of water quality and weather station data from the System Wide Monitoring Program of the National Estuarine Research Reserve System ', a('(NERRS).', href = 'http://www.nerrs.noaa.gov/', target = '_blank'), 'The drop down menus can be used to select the station, date range, and parameter for plotting. The raw data used for plotting include all SWMP records from the earliest date at each station.  The data were downloaded from the', a('CDMO', href='http://cdmo.baruch.sc.edu/', target = '_blank'), 'on November 25th, 2014 and include observations up to that date.  Plots are based on daily averages for each parameter. See the', a('GitHub repository', href='https://github.com/fawda123/swmp_summary', target = '_blank'), 'for source code.'),
-  
+
   # buttons on top
   fluidRow(
     
@@ -61,33 +56,30 @@ shinyUI(fluidPage(
     
       uiOutput("years")
       
-    ) #,
+    )
+  
+),
+  
+  fluidRow(
     
-#     column(4,
-#       h3('Select salinity range'), 
-#     
-#       selectInput(inputId = "salinity", label = '',  
-#         selected = 'all',
-#         choices = list(
-#           'all' = 'all',
-#           '00 - 06' = '00 - 06',
-#           '07 - 15' = '07 - 15',
-#           '16 - 20' = '16 - 20',
-#           '20 - 25' = '20 - 25'
-#         )
-#       )
-      
-#     )
-
+    column(12, 
+    div(class="outer",
+  
+  tags$head(
+    # Include our custom CSS
+    includeCSS("styles.css"),
+    includeScript("gomap.js")
   ),
-  
-  downloadButton('downloadplot', 'Download plot'),
-  
-  # Show the plot
-  leafletOutput('outplot')
-  
-#   tags$style(type="text/css",
-#       ".shiny-output-error { visibility: hidden; }",
-#       ".shiny-output-error:before { visibility: hidden; }")
+
+  leafletMap("map", width="100%", height="60%",
+    initialTileLayer = "//{s}.tiles.mapbox.com/v3/jcheng.map-5ebohr46/{z}/{x}/{y}.png",
+    initialTileLayerAttribution = HTML('Maps by <a href="http://www.mapbox.com/">Mapbox</a>'),
+    options=list(
+      center = c(37.45, -93.85),
+      zoom = 5, maxZoom=9,
+    maxBounds = list(list(15.961329,-129.92981), list(52.908902,-56.80481)) # Show US only
+    )
+  ))
     
+  ))
 ))
