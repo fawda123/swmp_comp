@@ -16,8 +16,9 @@ shinyUI(fluidPage(
     )
   ),
   
+  # title
   fluidRow(
-    column(8, offset=3,
+    column(12, offset=0,
            h2('Trends in estuarine water quality parameters using SWMP'),
            htmlWidgetOutput(
              outputId = 'desc',
@@ -29,6 +30,9 @@ shinyUI(fluidPage(
     )
   ),
   
+#   hr(),
+  
+  # controls
   fluidRow(
       
     column(4, 
@@ -78,12 +82,10 @@ shinyUI(fluidPage(
     
   ),
 
-  hr(),
-  
   fluidRow(
-    column(9, offset = 3,
+    column(12, offset = 0,
            h4(id='placeholder', class='shiny-text-output'),
-           plotOutput('statid', width='100%', height='250px')
+           plotOutput('statid', width='100%', height='500px')
     )
   )
 

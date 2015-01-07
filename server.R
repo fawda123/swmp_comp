@@ -3,9 +3,28 @@ library(ggplot2)
 library(maps)
 library(plyr)
 library(data.table)
+library(grid)
+library(gridExtra)
+library(RColorBrewer)
+library(httr)
+library(XML)
+library(shinyBS)
 
-data(uspop2000)
+# names of SWMP files on server
+files_s3 <- httr::GET('https://s3.amazonaws.com/swmpagg/')$content
+files_s3 <- rawToChar(files_s3)
+files_s3 <- htmlTreeParse(files_s3, useInternalNodes = T)
+files_s3 <- xpathSApply(files_s3, '//contents//key', xmlValue)
+
+mo_labs <- c('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec')
+mo_levs <- c('01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12')
+
+# load data
 data(all_dat)
+data(meta)
+data(north_am)
+
+# functions
 source('R/funcs.R')
 
 # From a future version of Shiny
@@ -22,6 +41,7 @@ bindEvent <- function(eventExpr, callback, env=parent.frame(), quoted=FALSE) {
   }))
 }
 
+# reactive functions for app
 shinyServer(function(input, output, session) {
   
   ## Define some reactives for accessing the data
@@ -94,13 +114,9 @@ shinyServer(function(input, output, session) {
     if (nrow(stations) == 0)
       return()
     
-#     browser()
-    
     # colors
     col_vec <- unique(stations[, c('lab', 'cols')])
     col_vec <- colorFactor(palette = col_vec$cols, levels = col_vec$lab)
-    
-#     browser()
 
     map$addCircleMarker(
       stations$Latitude,
@@ -124,7 +140,6 @@ shinyServer(function(input, output, session) {
     
     stations <- statsInBounds()
     
-#     browser()
     isolate({
       stat <- stations[row.names(stations) == event$id,]
       selectedstation <<- stat
@@ -161,15 +176,43 @@ shinyServer(function(input, output, session) {
 #     }
 #   })
   
+  ## retrieve from AmazonS3, uses httr GET
+  sel_dat <- reactive({
+    
+    if (!is.null(selectedstation))
+      stat_txt <- as.character(selectedstation$stat)
+    else
+      return()
+    
+    raw_content <- paste0('https://s3.amazonaws.com/swmpagg/', stat_txt, '.RData')
+    raw_content <- httr::GET(raw_content)$content
+    connect <- rawConnection(raw_content)
+    load(connect)
+    sel_dat <- get(stat_txt)
+    rm(list = stat_txt)
+    close(connect) 
+    
+    # year, month categories
+    sel_dat$year <- strftime(sel_dat$datetimestamp, '%Y')
+    sel_dat$month <- strftime(sel_dat$datetimestamp, '%m')
+    sel_dat$month <- factor(sel_dat$month, labels = mo_levs, levels = mo_levs)
+    
+    return(sel_dat)
+    
+  })
+
   # plot here
   output$statid <- renderPlot({
     if (!is.null(selectedstation))
       stat <- selectedstation
     else
       return()
-    
-    p <- plot(rnorm(100))
-    print(p)
+   
+#     browser()
+    param <- gsub('nut: |wq: |met: ', '', input$var)
+    stat <- as.character(selectedstation$stat)
+    plot_summary(sel_dat(), param, stat, input$years)
+   
   })
 
 })
