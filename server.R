@@ -67,14 +67,23 @@ shinyServer(function(input, output, session) {
     
   })
   
+  # Create the map; this is not the "real" map, but rather a proxy
+  # object that lets us control the leaflet map on the page.
+  map <- createLeafletMap(session, 'map')
+  
+  # summarized multi-station data
   to_plo <- reactive({
+    
+    map$clearPopups()
+    map$clearShapes()
     
     years <- input$years
     
     # processing
     load(file = 'data/meta.RData')
-    load(file = 'data/north_am.RData')
-    to_plo <- summs_fun(dat(), years, meta_in = meta, poly_in = north_am, noplot = T)
+    
+#     browser()
+    to_plo <- summs_fun(dat(), years, meta_in = meta)
     
     return(to_plo)
     
@@ -83,21 +92,15 @@ shinyServer(function(input, output, session) {
   # The stations that are within the visible bounds of the map
   statsInBounds <- reactive({
     if (is.null(input$map_bounds))
-      return(uspop2000[FALSE,])
+      return(to_plo()[FALSE,])
     bounds <- input$map_bounds
     latRng <- range(bounds$north, bounds$south)
     lngRng <- range(bounds$east, bounds$west)
-    
-#     browser()
-    
+        
     subset(to_plo(),
            Latitude >= latRng[1] & Latitude <= latRng[2] &
              Longitude >= lngRng[1] & Longitude <= lngRng[2])
   })
-  
-  # Create the map; this is not the "real" map, but rather a proxy
-  # object that lets us control the leaflet map on the page.
-  map <- createLeafletMap(session, 'map')
   
   makeReactiveBinding('selectedstation')
 
@@ -107,8 +110,10 @@ shinyServer(function(input, output, session) {
     selectedstation <<- NULL
   })
   
+  # map points
   observe({
     map$clearShapes()
+    map$clearPopups()
     stations <- statsInBounds()
     
     if (nrow(stations) == 0)
@@ -207,7 +212,6 @@ shinyServer(function(input, output, session) {
       stat <- selectedstation
     else
       return()
-   
 #     browser()
     param <- gsub('nut: |wq: |met: ', '', input$var)
     stat <- as.character(selectedstation$stat)

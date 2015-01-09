@@ -39,7 +39,7 @@ shinyUI(fluidPage(
            h3('Select parameter'),
            
            selectInput(inputId = "var", label = '',  
-                       selected = 'nut: po4f',
+                       selected = 'wq: temp',
                        choices = list(
                          'wq: Temperature (C)' = 'wq: temp',
                          'wq: Specific conductivity (mS/cm)' = 'wq: spcond',
@@ -69,24 +69,19 @@ shinyUI(fluidPage(
                          'nut: Nitrite + Nitrate (mg/L)' = 'nut: no23f', 
                          'nut: Chlorophyll-a (ug/L)' = 'nut: chla_n'
                        )
-           )
+           ), 
+           
+           h3('Select date range'),
+           
+           uiOutput('years')
            
     ),
     
-    column(4,
-           h3('Select date range'), 
-           
-           uiOutput("years")
-           
+    column(8, offset = 0,
+           h4(id='placeholder', class='shiny-text-output'),
+           plotOutput('statid', width='100%', height='250px')
     )
     
-  ),
-
-  fluidRow(
-    column(12, offset = 0,
-           h4(id='placeholder', class='shiny-text-output'),
-           plotOutput('statid', width='100%', height='500px')
-    )
   )
 
 ))
