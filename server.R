@@ -47,7 +47,7 @@ shinyServer(function(input, output, session) {
   ## Define some reactives for accessing the data
   ## get data given data_type and var
   dat <- reactive({
-    
+
     var <- input$var
     var <- strsplit(var, ': ')[[1]][2]
     dat <- all_dat[[var]]
@@ -74,15 +74,11 @@ shinyServer(function(input, output, session) {
   # summarized multi-station data
   to_plo <- reactive({
     
-    map$clearPopups()
-    map$clearShapes()
-    
     years <- input$years
     
     # processing
     load(file = 'data/meta.RData')
     
-#     browser()
     to_plo <- summs_fun(dat(), years, meta_in = meta)
     
     return(to_plo)
@@ -91,6 +87,7 @@ shinyServer(function(input, output, session) {
     
   # The stations that are within the visible bounds of the map
   statsInBounds <- reactive({
+
     if (is.null(input$map_bounds))
       return(to_plo()[FALSE,])
     bounds <- input$map_bounds
@@ -112,41 +109,46 @@ shinyServer(function(input, output, session) {
   
   # map points
   observe({
-    map$clearShapes()
-    map$clearPopups()
+
     stations <- statsInBounds()
     
     if (nrow(stations) == 0)
       return()
     
     # colors
-    col_vec <- unique(stations[, c('lab', 'cols')])
-    col_vec <- colorFactor(palette = col_vec$cols, levels = col_vec$lab)
+    col_vec <- stations[, c('cols')]
+    col_vec <- scales::rescale(col2rgb(col_vec), c(0, 1))
+    col_vec <- rgb(t(col_vec))
 
     map$addCircleMarker(
       stations$Latitude,
       stations$Longitude,
       stations$pval_rad, 
-      rownames(stations),
+      stations$stat, # this is the id that's returned on map click
       list(
-        weight=1.2,
+        weight=3,
         fill=TRUE,
-        color=col_vec(stations$lab)
-      )
+        color=col_vec,
+        fillOpacity = 0.5,
+        opacity = 1
+        )
     )
 
   })
   
   observe({
-    event <- input$map_marker_click
-    if (is.null(event))
-      return()
-    map$clearPopups()
     
+    event <- input$map_marker_click
+    
+    # this exits the function if nothing is clicked
+    if (is.null(event)) return()
+    
+    # id of map click
     stations <- statsInBounds()
+    stat <- stations[stations$stat %in% event$id, ]
     
     isolate({
-      stat <- stations[row.names(stations) == event$id,]
+      stat
       selectedstation <<- stat
       content <- as.character(tagList(
         tags$strong(stat$stat),
@@ -212,9 +214,11 @@ shinyServer(function(input, output, session) {
       stat <- selectedstation
     else
       return()
+    
 #     browser()
+    yrs <- input$years
     param <- gsub('nut: |wq: |met: ', '', input$var)
-    stat <- as.character(selectedstation$stat)
+    stat <- as.character(stat$stat)
     plot_summary(sel_dat(), param, stat, input$years)
    
   })
