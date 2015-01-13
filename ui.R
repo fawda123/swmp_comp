@@ -10,10 +10,10 @@ shinyUI(fluidPage(
     initialTileLayer = "//{s}.tiles.mapbox.com/v3/jcheng.map-5ebohr46/{z}/{x}/{y}.png",
     initialTileLayerAttribution = HTML('Maps by <a href="http://www.mapbox.com/">Mapbox</a>'),
     options=list(
-#       center = c(60.38, -152), 
-#       zoom = 6
-      center = c(40.00, -94.00),
-      zoom = 3
+      center = c(43.34, -70.54), 
+      zoom = 14
+#       center = c(40.00, -94.00),
+#       zoom = 3
     )
   ),
   

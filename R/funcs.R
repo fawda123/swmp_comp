@@ -16,12 +16,18 @@ summs_fun <- function(dat_in, yrs = NULL, meta_in = meta, cols = c(520, 522, 523
   # subset by parameter and year range
   dat_sel <- dat_in[dat_in$year >= yrs[1] & dat_in$year <= yrs[2], ]
   
-  # process on non-NA data
-  res <- dlply(na.omit(dat_sel), .variables = 'stat', 
+  # aggregate by years to match plots
+  dat_sel <- aggregate(value ~ stat + year, data = dat_sel, function(x) mean(x, na.rm = T))
+  dat_sel <- dat_sel[order(dat_sel$stat), ]
+  
+  # process data
+  res <- dlply(dat_sel, .variables = 'stat', 
     .fun = function(x){
       out <- tryCatch({
-        mod <- lm(value ~ datetimestamp, data = x)
-        summary(mod)$coefficients['datetimestamp', c(1, 4)]
+        x$value <- scale(x$value, scale = F, center = T)
+        x$year <- as.numeric(as.character(x$year))
+        mod <- lm(value ~ year, data = x, na.action = na.omit)
+        summary(mod)$coefficients['year', c(1, 4)]
       }, warning = function(w) w, error = function(e) e)
       if(any(c('warning', 'try-error', 'error', 'simpleError') %in% class(out))) out <- NA
       c(sign(out[1]), out[2])

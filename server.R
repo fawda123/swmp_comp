@@ -79,7 +79,15 @@ shinyServer(function(input, output, session) {
     # processing
     load(file = 'data/meta.RData')
     
+    browser()
+    
     to_plo <- summs_fun(dat(), years, meta_in = meta)
+    
+    # remove popups if parameters change
+    map$clearPopups()
+    
+    # remove map shapes if parameters change
+    map$clearMarkers()
     
     return(to_plo)
     
@@ -109,6 +117,8 @@ shinyServer(function(input, output, session) {
   
   # map points
   observe({
+
+    map$clearShapes()
 
     stations <- statsInBounds()
     
@@ -143,12 +153,11 @@ shinyServer(function(input, output, session) {
     # this exits the function if nothing is clicked
     if (is.null(event)) return()
     
-    # id of map click
-    stations <- statsInBounds()
-    stat <- stations[stations$stat %in% event$id, ]
+    map$clearPopups()
     
     isolate({
-      stat
+      stations <- statsInBounds()
+      stat <- stations[stations$stat %in% event$id, ]
       selectedstation <<- stat
       content <- as.character(tagList(
         tags$strong(stat$stat),
@@ -215,7 +224,6 @@ shinyServer(function(input, output, session) {
     else
       return()
     
-#     browser()
     yrs <- input$years
     param <- gsub('nut: |wq: |met: ', '', input$var)
     stat <- as.character(stat$stat)
