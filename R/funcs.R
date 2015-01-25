@@ -8,75 +8,91 @@
 #' @param cols is numeric vector of colors for plotting, correspond to indices in colors()
 #
 #' @return ggplot object
-summs_fun <- function(dat_in, yrs = NULL, meta_in = meta, cols = c(520, 522, 523, 503, 506, 507)){
+summs_fun <- function(dat_in, yrs = NULL, sumby = 'yrs_summ', meta_in = meta){
   
   # use all years if missing
-  if(is.null(yrs)) yrs <- range(dat_in$year)
+  if(is.null(yrs)) yrs <- as.numeric(range(dat_in$year))
   
   # subset by parameter and year range
   dat_sel <- dat_in[dat_in$year >= yrs[1] & dat_in$year <= yrs[2], ]
   
-  # aggregate by years to match plots
-  dat_sel <- aggregate(value ~ stat + year, data = dat_sel, function(x) mean(x, na.rm = T))
-  dat_sel <- dat_sel[order(dat_sel$stat), ]
+  if(sumby == 'yrs_summ'){
+    # aggregate by years to match plots
+    dat_sel <- aggregate(value ~ stat + year, data = dat_sel, function(x) mean(x, na.rm = T))
+    dat_sel <- dat_sel[order(dat_sel$stat), ]
+    
+    # create continuous yr vector based on input
+    years <- data.frame(year = seq(yrs[1], yrs[2]))
+    dat_sel <- merge(years, dat_sel, by = 'year', all.x = T)
+    dat_sel$year <- as.numeric(as.character(dat_sel$year))
+    
+    # assign year to summary column
+    dat_sel$summ_val <- dat_sel$year
+    
   
-  # process data
-  res <- dlply(dat_sel, .variables = 'stat', 
+  } else {
+    
+    # otherwise summary column is timestamp (defaults to months)
+    dat_sel$year <- as.numeric(as.character(dat_sel$year))
+    dat_sel$summ_val <- dat_sel$datetimestamp
+    
+  }
+  
+  # organize for regression 
+  # gets mean and anomalous value of parameter by period
+  # creates continous annual data
+  dat_org <- dlply(dat_sel, .variables = 'stat',
     .fun = function(x){
+      
+      # avg and anoms across period
+      val_avg <- mean(x$value, na.rm = T)
+      x$anom <- x$value - val_avg
+      
+      return(x)
+        
+    })
+  
+  # process data running regression model
+  res <- llply(dat_org, 
+    .fun = function(x){
+      
       out <- tryCatch({
+       
+        # create mod              
         x$value <- scale(x$value, scale = F, center = T)
-        x$year <- as.numeric(as.character(x$year))
-        mod <- lm(value ~ year, data = x, na.action = na.omit)
-        summary(mod)$coefficients['year', c(1, 4)]
+        mod <- lm(value ~ summ_val, data = x, na.action = na.omit)
+        sign_out <- sign(coef(mod)['summ_val'])
+        pval <- summary(mod)$fstatistic
+        pval <- pf(pval[1], pval[2], pval[3], lower.tail = F)
+        c(sign_out, pval)
       }, warning = function(w) w, error = function(e) e)
+      
       if(any(c('warning', 'try-error', 'error', 'simpleError') %in% class(out))) out <- NA
-      c(sign(out[1]), out[2])
+      
+      c(out[1], out[2])
     }
   )
+  
+  # format output list for res
   res <- na.omit(do.call('rbind', res))
   res <- data.frame(stat = row.names(res), res)
   row.names(res) <- NULL
   names(res) <- c('stat', 'sign', 'pval')
-  res$sign <- factor(res$sign, levels = c('1', '-1'), labels = c('POS', 'NEG'))
-  res$pval_rad <- as.numeric(as.character(cut(res$pval,
-    c(-Inf, 0.01, 0.05, +Inf),
-    labels=c('20', '10', '5')
-  )))
-  res$pval <- cut(res$pval,
-    c(-Inf, 0.01, 0.05, +Inf),
-    labels=c('p<0.01', 'p<0.05', 'nonsig')
+  
+  # get map marker data from map_marks function
+  to_plo <- map_marks(res)
+  
+  # return raw and modelled data
+  out <- list(
+    raw_dat = dat_org, 
+    res = to_plo
     )
-  res$lab <- factor(paste0(res$sign, ' (', res$pval, ')'))
-  
-  res <- data.table(res, key = 'stat')
-  
-  # merge locations with data for plotting
-  to_plo <- merge(res, meta_in, by = 'stat')
-  
-  # set legend based on unique values in results
-  leg_look <- data.frame(
-    lab = c('NEG (nonsig)', 'NEG (p<0.05)', 'NEG (p<0.01)', 'POS (nonsig)', 
-      'POS (p<0.05)', 'POS (p<0.01)'),
-    cols = colors()[cols],
-    shps = c(rep(25, 3), rep(24, 3))
-  )
-  leg_nms <- leg_look$lab %in% levels(res$lab)  
-  leg_cols <- as.character(leg_look[leg_nms, 'cols'])
-  leg_shps <- leg_look[leg_nms, 'shps']
-    
-  # merge w/ leg_look for colors, shapes
-  out <- data.frame(merge(to_plo, leg_look, by = 'lab', all.x = T))
-  out$cols <- as.character(out$cols)
-  
-  # return summary data
   return(out)
 
 }
 
-#' Create summary plot of seasonal, annual variation for a single reserve and parameters
-#' Taken from SwMPr package, same input with addition of stat, removed aggregate stuff
-#' 
-plot_summary <- function(dat_in, param, stat, years, ...){
+#' Create summary plot of seasonal, annual variation for a single reserve and parameter
+plot_summary <- function(dat_in, param, stat, years, trend_in){
   
   # select years to plot
   dat_plo <- data.frame(dat_in[dat_in$year %in% seq(years[1], years[2]), ])
@@ -115,46 +131,95 @@ plot_summary <- function(dat_in, param, stat, years, ...){
   )
   ylab <- lab_look[[param]]
   
-  # annual agg
-  form_in <- formula(paste0(param, ' ~ year'))
-  agg_fun <- function(x) mean(x, na.rm = T)
-  yr_agg <- plyr::ddply(dat_plo, .variables = 'year', 
-                        .fun = function(x) mean(x[, param], na.rm = T))
-  names(yr_agg)[names(yr_agg) %in% 'V1'] <- param
-  
   ##
   # plots
   
   # universal plot setting
   my_theme <- theme(axis.text = element_text(size = 8))
-  
-  # annual anomalies
-  yr_avg <- mean(yr_agg[, param], na.rm = T)
-  yr_agg$anom <- yr_agg[, param] - yr_avg
-  
-  # create continuous yr vector based on input
-  years <- data.frame(year = seq(years[1], years[2]))
-  yr_agg <- merge(years, yr_agg, by = 'year', all.x = T)
-  yr_agg$year <- as.character(yr_agg$year)
-  
-  p <- ggplot(yr_agg, aes(x = year, y = anom, group = 1, fill = anom)) +
+
+  # need to conver year limits to date if months are used  
+  if(class(dat_in$summ_val) %in% 'Date'){
+    years <- as.Date(as.character(years), origin = c('1970-01-01'), 
+      format = '%Y')
+  }
+    
+  p <- ggplot(dat_in, aes(x = summ_val, y = anom, group = 1, fill = anom)) +
     geom_bar(stat = 'identity') +
     scale_fill_gradient2(name = ylab,
                          low = 'lightblue', mid = 'lightgreen', high = 'tomato', midpoint = 0
     ) +
-    stat_smooth(method = 'lm', se = F, linetype = 'dashed', size = 1) +
+    stat_smooth(method = 'lm', se = F, linetype = 'dashed', 
+      size = 1,color = 'black') +
     theme_classic() +
-    ylab('Annual anomalies') +
+    ylab('Anomalies from long-term average') +
     xlab('') +
+    xlim(years[1], years[2]) +
     theme(legend.position = 'none') +
+    ggtitle(paste(stat, ylab, trend_in, sep = ', ')) + 
     my_theme
   
   ##
-  # combine plots
-  suppressWarnings(gridExtra::grid.arrange(
-    p
-  ))
+  # output plot
+  p
   
 }
 
+######
+#' Get colors and shapes for plotting map symbols
+#'
+#' Get colors and shapes for plotting map symbols based on significance and direction of parameter trends over time
+#' 
+#' @param res_in data frame of results from linear regression of parameter trends by year
+#' @param pval_cut numeric vector of values to cut pvalues for plotting
+#' @param chr string of radii for color markers in map used for p-value significance
+#' @param pval_lab chr string of p values labels
+#' @param dir_lab chr string of lables for direction of trend
+#' @param meta_in data table of station locations for plotting
+#' @param cols numeric vector of colors for plotting, used to index  \code{colors()}
+#' 
+#' @return a \code{\link[data.table]{data.table}} of station summary data for plotting showing significance of trends over time
+map_marks <- function(res_in, pval_cut = c(-Inf, 0.01, 0.05, +Inf), 
+  pval_radius = c('20', '10', '5'), pval_lab = c('p<0.01', 'p<0.05', 'nonsig'),  dir_lab = c('POS', 'NEG'), meta_in = meta, cols = c(520, 522, 523, 503, 506, 507)) {
+  
+  if(!any(names(res_in) %in% c('stat', 'sign', 'pval')))
+    stop('Incorrect naming convention for markers to plot')
+  
+  if(length(pval_cut) != 1 + length(pval_radius))
+    stop('Cut dimensions must equal 1 plus dimensions of marker radius')
 
+  if(length(pval_radius) != length(pval_lab))
+    stop('Label dimensions must equal radius dimensions')
+
+  # change sign levels to POS/NEG
+  res_in$sign <- factor(res_in$sign, levels = c('1', '-1'), 
+    labels = dir_lab)
+  
+  # set pval radius
+  res_in$pval_rad <- as.numeric(as.character(cut(res_in$pval,
+    pval_cut,
+    labels=pval_radius
+  )))
+  res_in$pval <- cut(res_in$pval,
+    pval_cut,
+    labels=pval_lab
+    )
+  res_in$lab <- factor(paste0(res_in$sign, ' (', res_in$pval, ')'))
+  
+  # get colors, have to do this because sometimes colors are subset
+  col_lookup <- expand.grid(dir_lab, pval_lab, stringsAsFactors = F)
+  col_lookup <- paste0(col_lookup[, 1], ' (', col_lookup[, 2], ')')
+  col_lookup <- data.frame(lab = sort(col_lookup), cols = cols, stringsAsFactors = F)
+  labs <- levels(res_in$lab)
+  col_lookup <- col_lookup[col_lookup$lab %in% labs, 'cols']
+  
+  res_in$cols <- factor(res_in$lab, levels = labs, 
+    labels = colors()[col_lookup])
+  res_in$cols <- as.character(res_in$cols)
+  
+  # merge locations with data for plotting
+  res_in <- data.table(res_in, key = 'stat')
+  to_plo <- merge(res_in, meta_in, by = 'stat')
+ 
+  return(to_plo)
+
+}

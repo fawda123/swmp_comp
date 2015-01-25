@@ -6,14 +6,14 @@ shinyUI(fluidPage(
   tags$head(tags$link(rel='stylesheet', type='text/css', href='styles.css')),
   
   leafletMap(
-    "map", "100%", 400,
+    "map", "100%", 450,
     initialTileLayer = "//{s}.tiles.mapbox.com/v3/jcheng.map-5ebohr46/{z}/{x}/{y}.png",
     initialTileLayerAttribution = HTML('Maps by <a href="http://www.mapbox.com/">Mapbox</a>'),
     options=list(
-      center = c(43.34, -70.54), 
-      zoom = 14
-#       center = c(40.00, -94.00),
-#       zoom = 3
+#       center = c(43.34, -70.54), 
+#       zoom = 14
+      center = c(40.00, -94.00),
+      zoom = 3
     )
   ),
   
@@ -72,6 +72,13 @@ shinyUI(fluidPage(
                        )
            ), 
            
+           h3('Summarize by:'),
+        
+           selectInput(inputId = "sumby", label = '',  
+             selected = 'yrs_summ',
+             choices = list('Years' = 'yrs_summ', 'Months' = 'mos_summ')
+           ),
+      
            h3('Select date range'),
            
            uiOutput('years')
@@ -80,7 +87,7 @@ shinyUI(fluidPage(
     
     column(8, offset = 0,
            h4(id='placeholder', class='shiny-text-output'),
-           plotOutput('statid', width='100%', height='250px')
+           plotOutput('statid', width='100%', height='300px')
     )
     
   )

@@ -8,7 +8,7 @@ library(gridExtra)
 library(RColorBrewer)
 library(httr)
 library(XML)
-library(shinyBS)
+
 
 # names of SWMP files on server
 files_s3 <- httr::GET('https://s3.amazonaws.com/swmpagg/')$content
@@ -75,58 +75,33 @@ shinyServer(function(input, output, session) {
   to_plo <- reactive({
     
     years <- input$years
+    sumby <- input$sumby
     
     # processing
     load(file = 'data/meta.RData')
     
-    browser()
-    
-    to_plo <- summs_fun(dat(), years, meta_in = meta)
+    to_plo <- summs_fun(dat(), years, sumby = sumby, meta_in = meta)
     
     # remove popups if parameters change
     map$clearPopups()
-    
-    # remove map shapes if parameters change
-    map$clearMarkers()
-    
+     
     return(to_plo)
     
   })
     
-  # The stations that are within the visible bounds of the map
-  statsInBounds <- reactive({
 
-    if (is.null(input$map_bounds))
-      return(to_plo()[FALSE,])
-    bounds <- input$map_bounds
-    latRng <- range(bounds$north, bounds$south)
-    lngRng <- range(bounds$east, bounds$west)
-        
-    subset(to_plo(),
-           Latitude >= latRng[1] & Latitude <= latRng[2] &
-             Longitude >= lngRng[1] & Longitude <= lngRng[2])
-  })
-  
   makeReactiveBinding('selectedstation')
-
-  observe({
-    if (is.null(input$map_click))
-      return()
-    selectedstation <<- NULL
-  })
   
   # map points
   observe({
 
-    map$clearShapes()
-
-    stations <- statsInBounds()
+    stations <- to_plo()[['res']]
     
     if (nrow(stations) == 0)
       return()
     
     # colors
-    col_vec <- stations[, c('cols')]
+    col_vec <- stations[['cols']]
     col_vec <- scales::rescale(col2rgb(col_vec), c(0, 1))
     col_vec <- rgb(t(col_vec))
 
@@ -151,21 +126,24 @@ shinyServer(function(input, output, session) {
     event <- input$map_marker_click
     
     # this exits the function if nothing is clicked
-    if (is.null(event)) return()
+    if (is.null(event)){
+      map$clearPopups()
+      return()
+    }
     
     map$clearPopups()
     
-    isolate({
-      stations <- statsInBounds()
-      stat <- stations[stations$stat %in% event$id, ]
-      selectedstation <<- stat
-      content <- as.character(tagList(
-        tags$strong(stat$stat),
-        tags$br(),
-        stat$lab
-      ))
-      map$showPopup(event$lat, event$lng, content, event$id)
-    })
+    # select content to display on popup
+    stations <- to_plo()[['res']]
+    stat <- stations[stations$stat %in% event$id, ]
+    selectedstation <<- stat
+    content <- as.character(tagList(
+      tags$strong(selectedstation$stat),
+      tags$br(),
+      selectedstation$lab
+    ))
+    map$showPopup(event$lat, event$lng, content, event$id)
+
   })
   
   # for description of widget
@@ -179,55 +157,25 @@ shinyServer(function(input, output, session) {
     )
   })
   
-#   # plot label here
-#   output$cityTimeSeriesLabel <- renderText({
-#     if (is.null(selectedstation)) {
-#       'Total population of visible cities'
-#     } else {
-#       paste('Population of ',
-#             selectedstation$City,
-#             ', ',
-#             selectedstation$State,
-#             sep='')
-#     }
-#   })
-  
-  ## retrieve from AmazonS3, uses httr GET
-  sel_dat <- reactive({
-    
-    if (!is.null(selectedstation))
-      stat_txt <- as.character(selectedstation$stat)
-    else
-      return()
-    
-    raw_content <- paste0('https://s3.amazonaws.com/swmpagg/', stat_txt, '.RData')
-    raw_content <- httr::GET(raw_content)$content
-    connect <- rawConnection(raw_content)
-    load(connect)
-    sel_dat <- get(stat_txt)
-    rm(list = stat_txt)
-    close(connect) 
-    
-    # year, month categories
-    sel_dat$year <- strftime(sel_dat$datetimestamp, '%Y')
-    sel_dat$month <- strftime(sel_dat$datetimestamp, '%m')
-    sel_dat$month <- factor(sel_dat$month, labels = mo_levs, levels = mo_levs)
-    
-    return(sel_dat)
-    
-  })
-
-  # plot here
+  # summary plot for individual station
   output$statid <- renderPlot({
-    if (!is.null(selectedstation))
-      stat <- selectedstation
-    else
-      return()
     
-    yrs <- input$years
+    event <- input$map_marker_click
+    
+    # this exits the function if nothing is clicked
+    if (is.null(event)){
+      map$clearPopups()
+      return()
+    }
+    
+    stat <- selectedstation$stat
+    sel_dat <- to_plo()[['raw_dat']][[as.character(stat)]]
     param <- gsub('nut: |wq: |met: ', '', input$var)
-    stat <- as.character(stat$stat)
-    plot_summary(sel_dat(), param, stat, input$years)
+    trend_in <- data.frame(to_plo()[['res']])
+    trend_in <- trend_in[trend_in$stat == as.character(stat), 'lab']
+    trend_in <- as.character(trend_in)
+    
+    plot_summary(sel_dat, param, stat, input$years, trend_in)
    
   })
 
