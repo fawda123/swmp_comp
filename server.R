@@ -9,20 +9,9 @@ library(RColorBrewer)
 library(httr)
 library(XML)
 
-
-# names of SWMP files on server
-files_s3 <- httr::GET('https://s3.amazonaws.com/swmpagg/')$content
-files_s3 <- rawToChar(files_s3)
-files_s3 <- htmlTreeParse(files_s3, useInternalNodes = T)
-files_s3 <- xpathSApply(files_s3, '//contents//key', xmlValue)
-
-mo_labs <- c('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec')
-mo_levs <- c('01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12')
-
 # load data
 data(all_dat)
 data(meta)
-data(north_am)
 
 # functions
 source('R/funcs.R')
@@ -59,7 +48,7 @@ shinyServer(function(input, output, session) {
     
     yrs <- as.numeric(as.character(unique(dat()$year)))
     
-    sliderInput("years", label = '',  
+    sliderInput("years", label = h4('Select date range:'),  
                 min = min(yrs), max = max(yrs), 
                 value = range(yrs),
                 format = '####'

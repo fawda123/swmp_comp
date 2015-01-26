@@ -6,7 +6,7 @@ shinyUI(fluidPage(
   tags$head(tags$link(rel='stylesheet', type='text/css', href='styles.css')),
   
   leafletMap(
-    "map", "100%", 450,
+    "map", "100%", 430,
     initialTileLayer = "//{s}.tiles.mapbox.com/v3/jcheng.map-5ebohr46/{z}/{x}/{y}.png",
     initialTileLayerAttribution = HTML('Maps by <a href="http://www.mapbox.com/">Mapbox</a>'),
     options=list(
@@ -20,12 +20,11 @@ shinyUI(fluidPage(
   # title
   fluidRow(
     column(12, offset=0,
-           h2('Trends in estuarine water quality parameters using SWMP'),
+           h2('Trends in SWMP parameters'),
+           h4(HTML("Created by Marcus W. Beck, <a href='mailto:beck.marcus@epa.gov'>beck.marcus@epa.gov</a>, Todd O'Brien, <a href='mailto:todd.obrien@noaa.gov'>todd.obrien@noaa.gov</a>")),
            htmlWidgetOutput(
              outputId = 'desc',
-             HTML(paste(
-               'The map is centered at <span id="lat"></span>, <span id="lng"></span>',
-               'with a zoom level of <span id="zoom"></span>.<br/>'
+             HTML(paste('This widget is an interactive tool to evaluate trends in SWMP data.  Trends are defined as an increase or decrease in values over time using a simple linear regression of summarized data.  The regression for each station can be viewed by clicking on the map.  Stations are plotted as circles that identify the direction and significance of the trend.  The trend direction is blue for decreasing and red for increasing.  The significance is indicated by radius of the circle and color shading.  Original data are available from <a href="http://cdmo.baruch.sc.edu/">http://cdmo.baruch.sc.edu/</a>. The map is centered at <b><span id="lat"></span></b>, <b><span id="lng"></span></b> with a zoom level of <b><span id="zoom"></span></b>.'
              ))
            )
     )
@@ -36,10 +35,10 @@ shinyUI(fluidPage(
   # controls
   fluidRow(
       
-    column(4, 
-           h3('Select parameter'),
-           
-           selectInput(inputId = "var", label = '',  
+    column(3, 
+  
+           # select parameter
+           selectInput(inputId = "var", label = h4('Select parameter:'),  
                        selected = 'wq: temp',
                        choices = list(
                          'wq: Temperature (C)' = 'wq: temp',
@@ -72,20 +71,18 @@ shinyUI(fluidPage(
                        )
            ), 
            
-           h3('Summarize by:'),
-        
-           selectInput(inputId = "sumby", label = '',  
+           # summarize by...
+           selectInput(inputId = "sumby", label = h4('Summarize by:'),  
              selected = 'yrs_summ',
              choices = list('Years' = 'yrs_summ', 'Months' = 'mos_summ')
            ),
       
-           h3('Select date range'),
-           
+           # select date range...
            uiOutput('years')
            
     ),
     
-    column(8, offset = 0,
+    column(9, offset = 0,
            h4(id='placeholder', class='shiny-text-output'),
            plotOutput('statid', width='100%', height='300px')
     )
