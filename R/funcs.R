@@ -179,7 +179,7 @@ plot_summary <- function(dat_in, param, stat, years, trend_in){
 #' 
 #' @return a \code{\link[data.table]{data.table}} of station summary data for plotting showing significance of trends over time
 map_marks <- function(res_in, pval_cut = c(-Inf, 0.01, 0.05, +Inf), 
-  pval_radius = c('20', '10', '5'), pval_lab = c('p<0.01', 'p<0.05', 'nonsig'),  dir_lab = c('POS', 'NEG'), meta_in = meta, cols = c(520, 523, 522, 503, 507, 506)) {
+  pval_radius = c('25', '17', '10'), pval_lab = c('p<0.01', 'p<0.05', 'nonsig'),  dir_lab = c('POS', 'NEG'), meta_in = meta, cols = c(520, 523, 522, 503, 507, 506)) {
   
   if(!any(names(res_in) %in% c('stat', 'sign', 'pval')))
     stop('Incorrect naming convention for markers to plot')

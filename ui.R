@@ -24,7 +24,7 @@ shinyUI(fluidPage(
            h4(HTML("Created by Marcus W. Beck, <a href='mailto:beck.marcus@epa.gov'>beck.marcus@epa.gov</a>, Todd O'Brien, <a href='mailto:todd.obrien@noaa.gov'>todd.obrien@noaa.gov</a>")),
            htmlWidgetOutput(
              outputId = 'desc',
-             HTML(paste('This widget is an interactive tool to evaluate trends in SWMP data.  Trends are defined as an increase or decrease in values over time using a simple linear regression of summarized data.  The regression for each station can be viewed by clicking on the map.  Stations are plotted as circles that identify the direction and significance of the trend.  The trend direction is blue for decreasing and red for increasing.  The significance is indicated by radius of the circle and color shading.  Original data are available from <a href="http://cdmo.baruch.sc.edu/">http://cdmo.baruch.sc.edu/</a>. The map is centered at <b><span id="lat"></span></b>, <b><span id="lng"></span></b> with a zoom level of <b><span id="zoom"></span></b>.'
+             HTML(paste('This widget is an interactive tool to evaluate trends in SWMP data.  Trends are defined as an increase or decrease in values over time using a simple linear regression of summarized data.  The regression for each station can be viewed by clicking on a station.  Trends at each station are plotted as circles that identify the direction and significance of the trend.  The trend direction is blue for decreasing and red for increasing.  The significance is indicated by radius of the circle and color shading where darker colors indicate a strong trend.  Original data are available from <a href="http://cdmo.baruch.sc.edu/">http://cdmo.baruch.sc.edu/</a>. The map is centered at <b><span id="lat"></span></b>, <b><span id="lng"></span></b> with a zoom level of <b><span id="zoom"></span></b>.'
              ))
            )
     )
@@ -47,7 +47,6 @@ shinyUI(fluidPage(
                          'wq: Dissolved oxyxgen (%)' = 'wq: do_pct',
                          'wq: Dissolved oxygen (mg/L)' = 'wq: do_mgl',
                          'wq: Depth (m)' = 'wq: depth',
-                         'wq: Referenced depth (m)' = 'wq: level',
                          'wq: pH' = 'wq: ph',
                          'wq: Turbidity (NTU)' = 'wq: turb',
                          'wq: Chl fluorescence (ug/L)' = 'wq: chlfluor',
@@ -61,7 +60,6 @@ shinyUI(fluidPage(
                          'met: Total PAR (mmol/m2)' = 'met: totpar',
                          'met: Total precipitation (mm)' = 'met: totprcp',
                          'met: Cumulative precipitation (mm)' = 'met: cumprcp',
-                         'met: Total solar radiation (watts/m2)' = 'met: totsorad',
                          'nut: Orthophosphate (mg/L)' = 'nut: po4f', 
                          'nut: Ammonium (mg/L)' = 'nut: nh4f',
                          'nut: Nitrite (mg/L)' = 'nut: no2f', 

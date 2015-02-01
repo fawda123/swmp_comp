@@ -73,6 +73,9 @@ shinyServer(function(input, output, session) {
     
     # remove popups if parameters change
     map$clearPopups()
+    
+    # clear map if parameters change
+    map$clearMarkers()
      
     return(to_plo)
     
@@ -100,11 +103,11 @@ shinyServer(function(input, output, session) {
       stations$pval_rad, 
       stations$stat, # this is the id that's returned on map click
       list(
-        weight=3,
+        weight=0, # width of circle perimeters
         fill=TRUE,
         color=col_vec,
-        fillOpacity = 0.5,
-        opacity = 1
+        fillOpacity = 0.7,
+        opacity = 0 # opacity of circle perimeter
         )
     )
 
