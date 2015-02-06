@@ -3,7 +3,7 @@ library(ShinyDash)
 
 shinyUI(fluidPage(
   
-  tags$head(tags$link(rel='stylesheet', type='text/css', href='styles.css')),
+  theme = 'styles.css',
   
   leafletMap(
     "map", "100%", 430,
@@ -24,7 +24,7 @@ shinyUI(fluidPage(
            h4(HTML("Created by Marcus W. Beck, <a href='mailto:beck.marcus@epa.gov'>beck.marcus@epa.gov</a>, Todd O'Brien, <a href='mailto:todd.obrien@noaa.gov'>todd.obrien@noaa.gov</a>")),
            htmlWidgetOutput(
              outputId = 'desc',
-             HTML(paste('This widget is an interactive tool to evaluate trends in SWMP data.  Trends are defined as an increase or decrease in values over time using a simple linear regression of summarized data.  The regression for each station can be viewed by clicking on a station.  Trends at each station are plotted as circles that identify the direction and significance of the trend.  The trend direction is blue for decreasing and red for increasing.  The significance is indicated by radius of the circle and color shading where darker colors indicate a strong trend.  Original data are available from <a href="http://cdmo.baruch.sc.edu/">http://cdmo.baruch.sc.edu/</a>. The map is centered at <b><span id="lat"></span></b>, <b><span id="lng"></span></b> with a zoom level of <b><span id="zoom"></span></b>.'
+             HTML(paste('This widget is an interactive tool to evaluate trends in SWMP data.  Trends are described by an increase or decrease in values over time using a simple linear regression of summarized data.  The regression for each station can be viewed by clicking on a map location.  Trends at each station are plotted as circles that identify the direction and significance of the trend.  The trend direction is blue for decreasing and red for increasing.  The significance is indicated by radius of the circle and color shading where larger points with darkers colors indicate a strong trend.  Original data are available from <a href="http://cdmo.baruch.sc.edu/">http://cdmo.baruch.sc.edu/</a>. The map is centered at <b><span id="lat"></span></b>, <b><span id="lng"></span></b> with a zoom level of <b><span id="zoom"></span></b>.'
              ))
            )
     )
@@ -72,7 +72,7 @@ shinyUI(fluidPage(
            # summarize by...
            selectInput(inputId = "sumby", label = h4('Summarize by:'),  
              selected = 'yrs_summ',
-             choices = list('Years' = 'yrs_summ', 'Months' = 'mos_summ')
+             choices = list('Years: anomalies' = 'yrs_anom', 'Years: averages' = 'yrs_avgs', 'Months: anomalies' = 'mos_anom', 'Months: averages' = 'mos_avgs')
            ),
       
            # select date range...

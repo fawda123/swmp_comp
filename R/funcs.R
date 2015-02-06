@@ -3,12 +3,12 @@
 #'
 #' @param dat_in summarized time series of selected SWMP data parameter for all stations
 #' @param chr of parameter to compare
-#' @param two element vector of years to subset data
+#' @param yrs two element vector of years to subset data
+#' @param sumby chr string describing summary method
 #' @param meta_in is data frame of station metadata, including lat/long 
-#' @param cols is numeric vector of colors for plotting, correspond to indices in colors()
-#
+#'
 #' @return ggplot object
-summs_fun <- function(dat_in, yrs = NULL, sumby = 'yrs_summ', meta_in = meta){
+summs_fun <- function(dat_in, yrs = NULL, sumby = c('yrs_summ', 'yrs_avg', 'mos_summ', 'mos_avg'),  meta_in = meta){
   
   # use all years if missing
   if(is.null(yrs)) yrs <- as.numeric(range(dat_in$year))
@@ -16,7 +16,8 @@ summs_fun <- function(dat_in, yrs = NULL, sumby = 'yrs_summ', meta_in = meta){
   # subset by parameter and year range
   dat_sel <- dat_in[dat_in$year >= yrs[1] & dat_in$year <= yrs[2], ]
   
-  if(sumby == 'yrs_summ'){
+  # if annual
+  if(grepl('^yrs', sumby)){
     # aggregate by years to match plots
     dat_sel <- aggregate(value ~ stat + year, data = dat_sel, function(x) mean(x, na.rm = T))
     dat_sel <- dat_sel[order(dat_sel$stat), ]
@@ -30,6 +31,7 @@ summs_fun <- function(dat_in, yrs = NULL, sumby = 'yrs_summ', meta_in = meta){
     dat_sel$summ_val <- dat_sel$year
     
   
+  # if monthly
   } else {
     
     # otherwise summary column is timestamp (defaults to months)
@@ -44,9 +46,15 @@ summs_fun <- function(dat_in, yrs = NULL, sumby = 'yrs_summ', meta_in = meta){
   dat_org <- dlply(dat_sel, .variables = 'stat',
     .fun = function(x){
       
-      # avg and anoms across period
-      val_avg <- mean(x$value, na.rm = T)
-      x$anom <- x$value - val_avg
+      # if summary is anom
+      if(grepl('_anom$', sumby)){
+        val_avg <- mean(x$value, na.rm = T)
+        x$anom <- x$value - val_avg
+      
+      # otherwise use value  
+      } else {
+        x$anom <- x$value
+      }
       
       return(x)
         
@@ -92,7 +100,15 @@ summs_fun <- function(dat_in, yrs = NULL, sumby = 'yrs_summ', meta_in = meta){
 }
 
 #' Create summary plot of seasonal, annual variation for a single reserve and parameter
-plot_summary <- function(dat_in, param, stat, years, trend_in){
+#' 
+#' @param dat_in \code{data.frame} of swmp station data selected on map click
+#' @param param chr string of parameter to plot
+#' @param stat chr string of station to plot
+#' @param years vector of years to plot
+#' @param trend_in chr string of label describing trend, output from \code{summs_fun}
+#' @param sumby chr string describing how data were summarized, see \code{summs_fun}
+#' 
+plot_summary <- function(dat_in, param, stat, years, trend_in, sumby){
   
   # select years to plot
   dat_plo <- data.frame(dat_in[dat_in$year %in% seq(years[1], years[2]), ])
@@ -143,15 +159,24 @@ plot_summary <- function(dat_in, param, stat, years, trend_in){
       format = '%Y')
   }
     
+  # change color scaling based on summary input
+  # change y axis title based on summary input
+  mdpt <- 0
+  ytitle <- 'Anomalies from long-term average'
+  if(grepl('_avgs$', sumby)){
+    mdpt <- mean(dat_in$anom, na.rm = T)
+    ytitle <- 'Long-term average'
+  }
+
   p <- ggplot(dat_in, aes(x = summ_val, y = anom, group = 1, fill = anom)) +
     geom_bar(stat = 'identity') +
     scale_fill_gradient2(name = ylab,
-                         low = 'lightblue', mid = 'lightgreen', high = 'tomato', midpoint = 0
+      low = 'lightblue', mid = 'lightgreen', high = 'tomato', midpoint = mdpt
     ) +
     stat_smooth(method = 'lm', se = F, linetype = 'dashed', 
       size = 1,color = 'black') +
     theme_classic() +
-    ylab('Anomalies from long-term average') +
+    ylab(ytitle) +
     xlab('') +
     xlim(years[1], years[2]) +
     theme(legend.position = 'none') +
