@@ -4,5 +4,5 @@ This repository contains materials for a shiny application to compare SWMP time 
 
 # Screenshot
 
-Forthcoming
+<a href="https://beckmw.shinyapps.io/swmp_comp"><img src = "screenshot.png"></a>
 
