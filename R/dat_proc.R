@@ -65,7 +65,3 @@ wq_dat <- wq_dat[!names(wq_dat) %in% c('cdepth', 'clevel')]
 # save output
 all_dat <- c(wq_dat, met_dat, nut_dat)
 save(all_dat, file = 'data/all_dat.RData')
-
-data(quakes)
-dat <- toGeoJSON(data=quakes, dest=tempdir())
-map <- leaflet(data=dat, dest=tempdir(),base.map="mqsat", popup="mag")

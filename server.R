@@ -51,7 +51,7 @@ shinyServer(function(input, output, session) {
     sliderInput("years", label = h4('Select date range:'),  
                 min = min(yrs), max = max(yrs), 
                 value = range(yrs),
-                format = '####'
+                sep = '', ticks = FALSE
     )
     
   })

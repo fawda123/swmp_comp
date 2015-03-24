@@ -178,7 +178,7 @@ plot_summary <- function(dat_in, param, stat, years, trend_in, sumby){
     theme_classic() +
     ylab(ytitle) +
     xlab('') +
-    xlim(years[1], years[2]) +
+    xlim(years[1] - 1, 1 + years[2]) + # +/-1, otherwise years truncated
     theme(legend.position = 'none') +
     ggtitle(paste(stat, ylab, trend_in, sep = ', ')) + 
     my_theme
