@@ -6,6 +6,7 @@ library(data.table)
 library(RColorBrewer)
 library(httr)
 library(XML)
+library(RJSONIO)
 
 # load data
 data(all_dat)
