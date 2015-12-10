@@ -92,13 +92,6 @@ shinyServer(function(input, output, session) {
     selectedstation <<- NULL
   })
   
-  # If the selected station is cleared for any reason, clear popups
-  observe({
-    if (is.null(selectedstation)) {
-      map %>% clearPopups()
-    }
-  })
-
   # Maintain circle markers
   observeEvent(stations(), {
 
@@ -121,26 +114,9 @@ shinyServer(function(input, output, session) {
       stroke = FALSE,
       color = col_vec,
       fillOpacity = 0.7,
-      opacity = 0
+      opacity = 0,
+      label = ~paste0(stat, ": ", lab)
     )
-  })
-  
-  # Maintain popups
-  observeEvent(selectedstation, {
-    
-    map %>% clearPopups()
-    
-    # select content to display on popup
-    content <- as.character(tagList(
-      tags$strong(selectedstation$stat),
-      tags$br(),
-      selectedstation$lab
-    ))
-    map %>% addPopups(
-      selectedstation$Longitude,
-      selectedstation$Latitude,
-      content,
-      selectedstation$stat)
   })
   
   # for description of widget
