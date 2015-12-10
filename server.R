@@ -55,10 +55,6 @@ shinyServer(function(input, output, session) {
     
   })
   
-  # Create the map; this is not the "real" map, but rather a proxy
-  # object that lets us control the leaflet map on the page.
-  map <- createLeafletMap(session, 'map')
-  
   # summarized multi-station data
   to_plo <- reactive({
     
@@ -68,101 +64,106 @@ shinyServer(function(input, output, session) {
     # processing
     load(file = 'data/meta.RData')
     
-    to_plo <- summs_fun(dat(), years, sumby = sumby, meta_in = meta)
-    
-    # remove popups if parameters change
-    map$clearPopups()
-    
-    # clear map if parameters change
-    map$clearMarkers()
-     
-    return(to_plo)
-    
+    summs_fun(dat(), years, sumby = sumby, meta_in = meta)
   })
-    
+  
+  stations <- reactive({
+    to_plo()[['res']]
+  })
+  
+
+  output$map <- renderLeaflet({
+    leaflet() %>%
+      addTiles("//{s}.tiles.mapbox.com/v3/jcheng.map-5ebohr46/{z}/{x}/{y}.png",
+        attribution = 'Maps by <a href="http://www.mapbox.com/">Mapbox</a>') %>%
+      setView(lng = -94, lat = 40, zoom = 3)
+  })
+  
+  map <- leafletProxy("map")
 
   makeReactiveBinding('selectedstation')
   
-  # map points
+  # Set selected station when marker is clicked
+  observeEvent(input$map_marker_click, {
+    selectedstation <<- stations()[stations()$stat %in% input$map_marker_click$id]
+  })
+  # Clear the selected station when map background is clicked
+  observeEvent(input$map_click, {
+    selectedstation <<- NULL
+  })
+  
+  # If the selected station is cleared for any reason, clear popups
   observe({
+    if (is.null(selectedstation)) {
+      map %>% clearPopups()
+    }
+  })
 
-    stations <- to_plo()[['res']]
+  # Maintain circle markers
+  observeEvent(stations(), {
+
+    selectedstation <<- NULL
+    map %>% clearMarkers()
     
-    if (nrow(stations) == 0)
+    if (nrow(stations()) == 0)
       return()
     
     # colors
-    col_vec <- stations[['cols']]
+    col_vec <- stations()[['cols']]
     col_vec <- scales::rescale(col2rgb(col_vec), c(0, 1))
     col_vec <- rgb(t(col_vec))
 
-    map$addCircleMarker(
-      stations$Latitude,
-      stations$Longitude,
-      stations$pval_rad, 
-      stations$stat, # this is the id that's returned on map click
-      list(
-        weight=0, # width of circle perimeters
-        fill=TRUE,
-        color=col_vec,
-        fillOpacity = 0.7,
-        opacity = 0 # opacity of circle perimeter
-        )
+    map %>% addCircleMarkers(data = stations(),
+      ~Longitude,
+      ~Latitude,
+      radius = ~pval_rad, 
+      layerId = ~stat, # this is the id that's returned on map click
+      stroke = FALSE,
+      color = col_vec,
+      fillOpacity = 0.7,
+      opacity = 0
     )
-
   })
   
-  observe({
+  # Maintain popups
+  observeEvent(selectedstation, {
     
-    event <- input$map_marker_click
-    
-    # this exits the function if nothing is clicked
-    if (is.null(event)){
-      map$clearPopups()
-      return()
-    }
-    
-    map$clearPopups()
+    map %>% clearPopups()
     
     # select content to display on popup
-    stations <- to_plo()[['res']]
-    stat <- stations[stations$stat %in% event$id, ]
-    selectedstation <<- stat
     content <- as.character(tagList(
       tags$strong(selectedstation$stat),
       tags$br(),
       selectedstation$lab
     ))
-    map$showPopup(event$lat, event$lng, content, event$id)
-
+    map %>% addPopups(
+      selectedstation$Longitude,
+      selectedstation$Latitude,
+      content,
+      selectedstation$stat)
   })
   
   # for description of widget
   output$desc <- reactive({
-    if (is.null(input$map_bounds))
+    if (is.null(input$map_center)) {
       return(list())
+    }
+    
     list(
-      lat = round(mean(c(input$map_bounds$north, input$map_bounds$south)), 2),
-      lng = round(mean(c(input$map_bounds$east, input$map_bounds$west)), 2),
+      lat = round(input$map_center$lat, 2),
+      lng = round(input$map_center$lng, 2),
       zoom = input$map_zoom
     )
   })
   
   # summary plot for individual station
   output$statid <- renderPlot({
-    
-    event <- input$map_marker_click
-    
-    # this exits the function if nothing is clicked
-    if (is.null(event)){
-      map$clearPopups()
-      return()
-    }
-    
+    validate(need(selectedstation, FALSE))    
+
     stat <- selectedstation$stat
     sel_dat <- to_plo()[['raw_dat']][[as.character(stat)]]
     param <- gsub('nut: |wq: |met: ', '', input$var)
-    trend_in <- data.frame(to_plo()[['res']])
+    trend_in <- data.frame(stations())
     trend_in <- trend_in[trend_in$stat == as.character(stat), 'lab']
     trend_in <- as.character(trend_in)
     sumby <- input$sumby
