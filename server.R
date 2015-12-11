@@ -81,6 +81,14 @@ shinyServer(function(input, output, session) {
   
   map <- leafletProxy("map")
 
+  # add legend
+  map <- map %>% 
+      addLegend(position = 'bottomleft', title = 'Trend colors', 
+        colors = rgb(t(col2rgb(colors()[c(520, 522, 523, 503, 506, 507)])) / 255),
+        labels = c('NEG (nonsig)', 'NEG (p<0.05)', 'NEG (p<0.01)','POS (nonsig)', 'POS (p<0.05)', 'POS (p<0.01)'), 
+        opacity = 0.7
+      )
+  
   makeReactiveBinding('selectedstation')
   
   # Set selected station when marker is clicked
@@ -117,6 +125,7 @@ shinyServer(function(input, output, session) {
       opacity = 0,
       label = ~paste0(stat, ": ", lab)
     )
+    
   })
   
   # for description of widget
