@@ -26,7 +26,7 @@ for(fl in files_s3){
   rm(list = stat)
   close(connect) 
   
-  dat <- aggregate(dat, by =  'months')
+  dat <- aggreswmp(dat, by =  'months')
 
   out_ls[[fl]] <- dat
   

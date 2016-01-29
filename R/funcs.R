@@ -179,7 +179,11 @@ plot_summary <- function(dat_in, param, stat, years, trend_in, sumby){
     ylab(ytitle) +
     xlab('') +
     xlim(years[1] - 1, 1 + years[2]) + # +/-1, otherwise years truncated
-    theme(legend.position = 'none') +
+    theme(
+      legend.position = 'none', 
+      axis.text.x = element_text(size = 12),
+      axis.text.y = element_text(size = 12)
+      ) +
     ggtitle(paste(stat, ylab, trend_in, sep = ', ')) + 
     my_theme
   
