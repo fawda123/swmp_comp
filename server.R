@@ -152,7 +152,7 @@ shinyServer(function(input, output, session) {
     trend_in <- trend_in[trend_in$stat == as.character(stat), 'lab']
     trend_in <- as.character(trend_in)
     sumby <- input$sumby
-    
+
     plot_summary(sel_dat, param, stat, input$years, trend_in, sumby)
    
   })
