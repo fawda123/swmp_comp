@@ -3,7 +3,7 @@ library(devtools)
 library(plyr)
 library(httr)
 library(XML)
-load_all('M:/docs/SWMPr')
+library(SWMPr)
 
 # names of files on server
 files_s3 <- httr::GET('https://s3.amazonaws.com/swmpagg/')$content

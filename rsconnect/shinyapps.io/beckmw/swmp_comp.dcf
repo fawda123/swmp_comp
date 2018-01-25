@@ -1,6 +1,10 @@
 name: swmp_comp
+title:
+username:
 account: beckmw
 server: shinyapps.io
-bundleId: 787218
+hostUrl: https://api.shinyapps.io/v1
+appId: 28116
+bundleId: 1192941
 url: https://beckmw.shinyapps.io/swmp_comp/
-when: 1492026592.70573
+when: 1516905187.50443
