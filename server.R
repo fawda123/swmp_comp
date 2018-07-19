@@ -95,11 +95,11 @@ shinyServer(function(input, output, session) {
   observeEvent(input$map_marker_click, {
     selectedstation <<- stations()[stations()$stat %in% input$map_marker_click$id]
   })
-  # Clear the selected station when map background is clicked
-  observeEvent(input$map_click, {
-    selectedstation <<- NULL
-  })
-  
+  # # Clear the selected station when map background is clicked
+  # observeEvent(input$map_click, {
+  #   selectedstation <<- NULL
+  # })
+
   # Maintain circle markers
   observeEvent(stations(), {
 
