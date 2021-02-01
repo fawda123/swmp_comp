@@ -74,8 +74,7 @@ shinyServer(function(input, output, session) {
 
   output$map <- renderLeaflet({
     leaflet() %>%
-      addTiles("//{s}.tiles.mapbox.com/v3/jcheng.map-5ebohr46/{z}/{x}/{y}.png",
-        attribution = 'Maps by <a href="http://www.mapbox.com/">Mapbox</a>') %>%
+      addTiles() %>%
       setView(lng = -94, lat = 40, zoom = 3)
   })
   
