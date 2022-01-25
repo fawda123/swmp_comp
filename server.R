@@ -142,7 +142,8 @@ shinyServer(function(input, output, session) {
   
   # summary plot for individual station
   output$statid <- renderPlot({
-    validate(need(selectedstation, FALSE))    
+    
+    validate(need(selectedstation, 'Select a station to plot by clicking a point on the map'))    
 
     stat <- selectedstation$stat
     sel_dat <- to_plo()[['raw_dat']][[as.character(stat)]]
