@@ -1,6 +1,5 @@
+library(shiny)
 library(leaflet)
-library(ShinyDash)
-
 shinyUI(fluidPage(
   
   theme = 'styles.css',
@@ -10,13 +9,9 @@ shinyUI(fluidPage(
   # title
   fluidRow(
     column(12, offset=0,
-           h2('Trends in SWMP parameters'),
-           h4(HTML("Created by Marcus W. Beck, <a href='mailto:mbeck@tbep.org'>mbeck@tbep.org</a>, Todd O'Brien, <a href='mailto:todd.obrien@noaa.gov'>todd.obrien@noaa.gov</a>")),
-           htmlWidgetOutput(
-             outputId = 'desc',
-             HTML(paste('This widget is an interactive tool to explore trends in SWMP data.  Trends are described by an increase or decrease in values over time using a simple linear regression of summarized data.  The regression for each station can be viewed by clicking on a map location.  Trends at each station are plotted as circles that identify the direction and significance of the trend.  The trend direction is blue for decreasing and red for increasing.  The significance is indicated by radius of the circle and color shading where larger points with darkers colors indicate a strong trend.  Original data are available from <a href="http://cdmo.baruch.sc.edu/">http://cdmo.baruch.sc.edu/</a>. See the <a href="https://github.com/fawda123/swmp_comp">GitHub repository</a> for source code. The data include observations through December 2022 (if available) and are current as of May 23rd, 2023. Please note that the use of simple regression to identify trends is for exploratory purposes only and may not be appropriate for all datasets.  Trends also do not account for missing observations in each year.  The map is centered at <b><span id="lat"></span></b>, <b><span id="lng"></span></b> with a zoom level of <b><span id="zoom"></span></b>.'
-             ))
-           )
+      h2('Trends in SWMP parameters'),
+      h4(HTML("Created by Marcus W. Beck, <a href='mailto:mbeck@tbep.org'>mbeck@tbep.org</a>, Todd O'Brien, <a href='mailto:todd.obrien@noaa.gov'>todd.obrien@noaa.gov</a>")),
+      HTML(paste0('This widget is an interactive tool to explore trends in SWMP data.  Trends are described by an increase or decrease in values over time using a simple linear regression of summarized data.  The regression for each station can be viewed by clicking on a map location.  Trends at each station are plotted as circles that identify the direction and significance of the trend.  The trend direction is blue for decreasing and red for increasing.  The significance is indicated by radius of the circle and color shading where larger points with darkers colors indicate a strong trend.  Original data are available from <a href="http://cdmo.baruch.sc.edu/">http://cdmo.baruch.sc.edu/</a>. See the <a href="https://github.com/fawda123/swmp_comp">GitHub repository</a> for source code. The data include observations through December 2023 (if available) and are current as of June 24th, 2024. Please note that the use of simple regression to identify trends is for exploratory purposes only and may not be appropriate for all datasets.  Trends also do not account for missing observations in each year.  The map is centered at <b>', textOutput('lat', inline = T), '</b>, <b>', textOutput('lng', inline = T), '</b> with a zoom level of <b>', textOutput('zoom', inline = T), '</b>.'))
     )
   ),
   

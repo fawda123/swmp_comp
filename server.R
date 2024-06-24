@@ -128,7 +128,7 @@ shinyServer(function(input, output, session) {
   })
   
   # for description of widget
-  output$desc <- reactive({
+  desc <- reactive({
     if (is.null(input$map_center)) {
       return(list())
     }
@@ -138,6 +138,18 @@ shinyServer(function(input, output, session) {
       lng = round(input$map_center$lng, 2),
       zoom = input$map_zoom
     )
+  })
+  
+  output$lat <- renderText({
+    desc()$lat
+  })
+  
+  output$lng <- renderText({
+    desc()$lng
+  })
+  
+  output$zoom <- renderText({
+    desc()$zoom
   })
   
   # summary plot for individual station

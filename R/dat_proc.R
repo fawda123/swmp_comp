@@ -5,6 +5,25 @@ library(httr)
 library(XML)
 library(SWMPr)
 
+# create meta ---------------------------------------------------------------------------------
+
+meta <- readr::read_csv('data-raw/sampling_stations.csv') |>
+  dplyr::filter(Status == 'Active') |>
+  dplyr::select(
+    stat = `Station Code`,
+    Latitude,
+    Longitude
+  ) |>
+  dplyr::mutate(
+    Latitude = as.numeric(Latitude),
+    Longitude = -1 * as.numeric(Longitude)
+  ) |>
+  dplyr::distinct()
+
+save(meta, file = 'data/meta.RData')
+
+# create all_dat ------------------------------------------------------------------------------
+
 # names of files on server
 files_s3 <- httr::GET('https://s3.amazonaws.com/swmpagg/')$content
 files_s3 <- rawToChar(files_s3)
@@ -65,3 +84,5 @@ wq_dat <- wq_dat[!names(wq_dat) %in% c('cdepth', 'clevel')]
 # save output
 all_dat <- c(wq_dat, met_dat, nut_dat)
 save(all_dat, file = 'data/all_dat.RData')
+
+
